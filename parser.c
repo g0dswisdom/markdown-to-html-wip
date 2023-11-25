@@ -54,9 +54,9 @@ char* createFile(char* fileName, char* content) { // for later
     fclose(file);
 }
 
-char* convertExtractedIdk(char* extracted, char* HTML_tag1, char*HTML_tag2, int amount) {
+char* convertExtractedIdk(char* extracted, char* HTML_tag1, char* HTML_tag2, int amount) {
     if (strlen(extracted) == 0) {
-        free(extracted);
+        //free(extracted); // I just realized that freeing it here causes a double free error.. on linux.. lol 
         return NULL;
     }
     char* text = malloc(strlen(extracted) + amount); // for example the italic text: (extracted) + 8
@@ -77,7 +77,7 @@ char* concatenateStrings(char* first, char* second) {
     return first;
 }
 
-void handleHTML(char* extracted, char* HTML_tag1, char* HTML_tag2, int amount, char** chr) { // it took me 15 mins to fix this shit
+void handleHTML(char* extracted, char* HTML_tag1, char* HTML_tag2, int amount, char** chr) {
     char* text = convertExtractedIdk(extracted, HTML_tag1, HTML_tag2, amount);
     if (text != NULL) {
         if (*chr == NULL) {
@@ -89,9 +89,8 @@ void handleHTML(char* extracted, char* HTML_tag1, char* HTML_tag2, int amount, c
     }
 }
 
-
 void doMagic(char* fileName) {
-    system("cls");
+    system("clear");
     FILE* file;
     char* line = NULL;
     size_t len = 0;
@@ -105,13 +104,21 @@ void doMagic(char* fileName) {
 
     char *italic = NULL;
     char *bold = NULL;
+    bool inBlockQuote = false;
+    bool withinH1 = false;
 
     while ((read = (int)getline(&line, &len, file)) != -1) {
-        if (startsWith(line, "#")) {
-            if (line[strlen(line) - 1] == '\n') {
-                line[strlen(line) - 1] = '\0';
+        if (startsWith(line, "#")) { // only fix i could find for this D:
+            if (withinH1) {
+                withinH1 = false;
             }
             printf("<h1>%s</h1>\n", line + 1);
+            withinH1 = true;
+        } else {
+            if (withinH1) {
+                withinH1 = false;
+            }
+            //printf("%s", line);
         }
 
         char *extractedItalic = extractText(line, "*", "*");
@@ -136,6 +143,7 @@ void doMagic(char* fileName) {
         printf("%s", bold);
         free(bold);
     }
+    printf("\n");
     
     if (line != NULL) {
         free(line);

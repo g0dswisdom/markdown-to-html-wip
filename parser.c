@@ -11,7 +11,6 @@
  *  - Fix h1 shit
  *  - Whenever I feel like it, move the functions to a separate file
  *  - Paragraphs
- *  - Somehow handle the annoying extracting shit ?!
 */
 
 bool startsWith(const char *a, const char *b) {
@@ -44,7 +43,7 @@ char* extractText(const char *line, const char *startToken, const char *endToken
     return NULL;
 }
 
-char* createFile(char* fileName, char* content) {
+char* createFile(char* fileName, char* content) { // for later
     FILE *file;
     file = fopen(fileName, "w");
     if (file == NULL) {
@@ -78,6 +77,19 @@ char* concatenateStrings(char* first, char* second) {
     return first;
 }
 
+void handleHTML(char* extracted, char* HTML_tag1, char* HTML_tag2, int amount, char** chr) { // it took me 15 mins to fix this shit
+    char* text = convertExtractedIdk(extracted, HTML_tag1, HTML_tag2, amount);
+    if (text != NULL) {
+        if (*chr == NULL) {
+            *chr = strdup(text);
+        } else {
+            *chr = concatenateStrings(*chr, text);
+        }
+        free(text);
+    }
+}
+
+
 void doMagic(char* fileName) {
     system("cls");
     FILE* file;
@@ -103,32 +115,14 @@ void doMagic(char* fileName) {
         }
 
         char *extractedItalic = extractText(line, "*", "*");
-        
         if (extractedItalic != NULL) {
-            char* italicText = convertExtractedIdk(extractedItalic, "<i>", "</i>", 8);
-            if (italicText != NULL) {
-                if (italic == NULL) {
-                    italic = strdup(italicText);
-                } else {
-                    italic = concatenateStrings(italic, italicText);
-                }
-                free(italicText);
-            }
+            handleHTML(extractedItalic, "<i>", "</i>", 8, &italic);
             free(extractedItalic);
         }
-        
-        char *extractedBold = extractText(line, "**", "**");
 
+        char *extractedBold = extractText(line, "**", "**");
         if (extractedBold != NULL) {
-            char* boldText = convertExtractedIdk(extractedBold, "<strong>", "</strong>", 18);
-            if (boldText != NULL) {
-                if (bold == NULL) {
-                    bold = strdup(boldText);
-                } else {
-                    bold = concatenateStrings(bold, boldText);
-                }
-                free(boldText);
-            }
+            handleHTML(extractedBold, "<strong>", "</strong>", 18, &bold);
             free(extractedBold);
         }
     }
